@@ -2,14 +2,57 @@
 
 # 260629
 
+## sources
+
 - [slides](https://docs.google.com/presentation/d/1C7Mwcdt3m7QfknjxOcZXIfugGhLVEKumrAQWOlkqRtM/edit)
 - [workstation setup](https://web.archive.org/web/20230217220014/https://sdk.rethinkrobotics.com/intera/Workstation_Setup#Install_Intera_SDK_Dependencies)
 - [gazebo tutorial](https://web.archive.org/web/20230217230807/https://sdk.rethinkrobotics.com/intera/Gazebo_Tutorial)
 
-## install ROS on ubuntu 20 docker
+## learned
+
+- introduced to basic idea of the project with VLA
+- pretty sure this sort of organization VPN + user on build server with ssh/remote desktop is very common in irl setup
+- docker stuff:
+
+docker useful commands
 
 ```
-docker run -it --rm \
+# create a container from an image but do not run it
+docker create ...
+
+# start an EXISTING container (e.g. one you created)
+docker start <container_name>
+
+# run a fresh no container from an image
+docker run ...
+
+# get into bash of an existing container
+docker exec -it <container_name> /bin/bash
+```
+
+flags:
+
+- `-d`: detached
+- `-it`: interactive and tty
+- `--rm`: delete filesystem after done
+
+## log
+
+We visited the lab and the office.
+
+We got introduced to the robot arm and localization
+
+We set up accounts on the build server and set up remote connection and remote desktop using BU's vpn and using
+NoMachine for remote desktop.
+
+We noticed that NoMachine only worked for one session at a time, so still figuring that out.
+
+### install ROS on ubuntu 20 docker
+
+install and run container with noetic setup already. use host network, host gpu, and host display.
+
+```
+docker run -it \
   --name=ros \
   --net=host \
   --gpus all \
@@ -18,6 +61,10 @@ docker run -it --rm \
   -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
   osrf/ros:noetic-desktop-full
 ```
+
+> oops actually I used `--rm` irl but I don't think we want to run with that because that will remove the filesystem when it exits
+
+make sure ros setup script always runs:
 
 ```
 echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
@@ -31,13 +78,17 @@ nvidia-smi
 echo $DISPLAY
 ```
 
-need to
+DISPLAY is empty, need to set it
 
 ```
 export DISPLAY=:1
 ```
 
-## sawyer setup
+colon syntax: `hostname:display.screen`, so :0 is usually main monitor, :1 may be remote GUI
+
+### sawyer setup
+
+dependencies
 
 ```
 apt update
@@ -51,6 +102,8 @@ pip install argparse
 rosdep init
 rosdep update
 ```
+
+get code and compile
 
 ```
 mkdir -p ~/ros_ws/src
@@ -73,7 +126,11 @@ Change /ros_ws/src/sawyer_simulator/sawyer_gazebo/src/head_interface.cpp line 71
 cv_ptr->image = cv::imread(img_path, cv::IMREAD_UNCHANGED);
 ```
 
+run
+
 ```
 . devel/setup.bash
 roslaunch sawyer_sim_examples sawyer_pick_and_place_demo.launch
 ```
+
+haven't tested with desktop yet
