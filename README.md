@@ -122,6 +122,14 @@ catkin_make
 
 Change /ros_ws/src/sawyer_simulator/sawyer_gazebo/src/head_interface.cpp line 71, due to deprecated constant:
 
+old:
+
+```
+cv_ptr->image = cv::imread(img_path, CV_LOAD_IMAGE_UNCHANGED);
+```
+
+new:
+
 ```
 cv_ptr->image = cv::imread(img_path, cv::IMREAD_UNCHANGED);
 ```
@@ -129,6 +137,7 @@ cv_ptr->image = cv::imread(img_path, cv::IMREAD_UNCHANGED);
 run
 
 ```
+catkin_make
 . devel/setup.bash
 roslaunch sawyer_sim_examples sawyer_pick_and_place_demo.launch
 ```
