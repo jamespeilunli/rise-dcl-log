@@ -385,3 +385,163 @@ btw this tf stuff is all tf 1, tf 2 is the updated version that i don't think we
 - collaboration was kind of annoying so we probably going to use git repo in future
 - the robot only gets the block pose once before going for it, so it could move around while we're getting to it
 - had to offset the position, maybe due to semantics of where the origin in the block model is
+
+# 260704
+
+## sources
+
+1. [rqt_plot](https://wiki.ros.org/rqt_plot)
+2. [rviz](https://wiki.ros.org/rviz)
+3. [intera_interface](https://rethinkrobotics.github.io/intera_sdk_docs/5.0.4/intera_interface/html/intera_interface.limb.Limb-class.html)
+
+## learned
+
+### rviz
+
+- see source 2
+- rviz seems to have many use cases, but today I used it to visualize the tf frames
+- you can check the frames you want to see and see their relationships to each other
+- make sure to keep the time in sync with the sim
+
+### rqt_plot
+
+see source 1
+
+### rqt_image_view
+
+### rosrun image_view
+
+`rosrun image_view image_view image:=<path_to_image_topic>`
+
+### coordinate conventions/vocab
+
+- "rpy": roll pitch yaw
+- x y z matches up with r g b
+
+## log
+
+### pt 1: somewhat successful pnp!
+
+#### using block center as block coordinates
+
+the origin of the block model is in the corner. we must offset by + [0.025, 0.025, 0.025] to make the coordinates in the center.
+
+```python
+if object_name == "block":
+    p = np.array([
+        pose.position.x,
+        pose.position.y,
+        pose.position.z
+    ])
+
+    q = [
+        pose.orientation.x,
+        pose.orientation.y,
+        pose.orientation.z,
+        pose.orientation.w
+    ]
+
+    # quaternion_matrix from tf.transformations
+    # turn quaternion into a 3d rotation matrix.
+    # by default the matrix returns a 4x4 *homogeneous transform* which has a translation component
+    R = quaternion_matrix(q)[:3, :3]
+
+    offset_local = np.array([0.025, 0.025, 0.025])
+    # rotation matrix times offset is our delta to find the center
+    center = p + R.dot(offset_local)
+
+    t.transform.translation.x = center[0]
+    t.transform.translation.y = center[1]
+    t.transform.translation.z = center[2]
+```
+
+#### also did some logic changes to make picking up and placing down faster
+
+#### exiting a ros process
+
+i tried using try catch on stuff like `rospy.exceptions.ROSInterruptException` but looks like that doesn't actually work
+
+TODO: look into this further. but i think you just have to do `if rospy.is_shutdown() return`
+
+#### why does ik_request take in a pose in the sawyer frame?
+
+`hdr = Header(stamp=rospy.Time.now(), frame_id='base')` in
+`src/intera_sdk/intera_interface/src/intera_interface/limb.py`:
+you may think base means the base frame, but it's actually the base of the model.
+
+in `src/sawyer_simulator/sawyer_gazebo/launch/sawyer_world.launch`:
+
+```
+  args="-param robot_description -urdf -z 0.93 -model sawyer ..."
+```
+
+additionally, base is the same as world in this case.
+
+so sawyer is 0.93 z above world/base.
+
+this matches up with what we see from tf_echo:
+
+```
+root@depend:~/ros_ws# rosrun tf tf_echo base block
+At time 1362.251
+- Translation: [1.027, 0.325, 0.797]
+- Rotation: in Quaternion [-0.000, 0.000, -0.409, 0.913]
+            in RPY (radian) [-0.000, -0.000, -0.842]
+            in RPY (degree) [-0.000, -0.000, -48.268]
+root@depend:~/ros_ws# rosrun tf tf_echo base sawyer
+At time 1366.104
+- Translation: [-0.000, -0.000, 0.930]
+- Rotation: in Quaternion [0.000, -0.000, -0.000, 1.000]
+            in RPY (radian) [0.000, -0.000, -0.000]
+            in RPY (degree) [0.000, -0.000, -0.000]
+root@depend:~/ros_ws# rosrun tf tf_echo sawyer block
+At time 1371.908
+- Translation: [1.027, 0.325, -0.133]
+- Rotation: in Quaternion [-0.000, 0.000, -0.409, 0.913]
+            in RPY (radian) [-0.000, -0.000, -0.842]
+            in RPY (degree) [-0.000, -0.000, -48.268]
+root@depend:~/ros_ws# rosrun tf tf_echo world base
+At time 0.000
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.000, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.000]
+            in RPY (degree) [0.000, -0.000, 0.000]
+```
+
+#### troubles with max speed
+
+TODO: figure out
+
+`set_joint_position_speed` didn't seem to change speed at all even when setting it to zero
+
+#### normalized quaternion interpolation
+
+#### final system
+
+- i edited the logic to make it do the pick and place loop a bit faster.
+- it reuses \_servo_to_pose for the approach location which is just the goal position but +hover_distance z
+- in a loop, it goes to approach location for picking, then picks, then goes back up to approach, then does the same except for placing instead of picking
+- placing is done at +0.1 x the original picking location
+
+#### future
+
+- maybe could detect if block is inside by getting force on grabbers (see intera docs)
+
+### pt 2: camera simulation
+
+- the sawyer sim example already had camera simulation. i checked by doing `rostopic list | grep camera` and seeing `/io/internal_camera/head_camera/image_raw` and `/io/internal_camera/right_hand_camera/image_raw`
+- can stream using `rosrun image_view image_view image:=<path_to_image_topic>` or `rqt_image_view`
+- the head camera worked pretty well but the right_hand_camera was not in the right location, orientation. it also was monochrome
+
+### fixing right_hand_camera pose
+
+- checked arm components using `rosrun tf view_frames`
+- in gazebo we highlighted the components of the arm (right_l5 and right_l6)
+- noticed right_hand_camera was on right_l5 in `~/ros_ws/src/sawyer_robot/sawyer_description/urdf/sawyer_base.urdf.xacro`
+- because we want it to be pointing sort of parallel to the grabbers, we want it to be on right_l6
+- we configured its parent to be right_l6 and updated its position and orientation accordingly
+
+### fixing right_hand_camera to have color
+
+- had to change configs in `~/ros_ws/src/sawyer_simulator/sawyer_gazebo/launch/sawyer_sim_cameras.launch`
+- had to change format from `L8` to `R8G8B8` in `~/ros_ws/src/sawyer_robot/sawyer_description/urdf/sawyer_base.gazebo.xacro`
