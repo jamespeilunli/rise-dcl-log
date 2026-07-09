@@ -18,6 +18,10 @@ instructions to try from Dr. Li
 
 ## log
 
+### fixing python lsp
+
+turns out i had a 2 year old version of vscode that python extension wasn't supported anymore. i deleted it and reinstalled.
+
 ### ground truth
 
 added a ground truth node that finds the banana translation relative to cafe table, and determines its quadrant based on inequalities.
