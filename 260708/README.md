@@ -9,6 +9,7 @@ instructions to try from Dr. Li
 - spatial reasoning relative to objects
 - counting
 - action plan (text first)
+- action plan (representation of direction)
 
 ## sources
 
