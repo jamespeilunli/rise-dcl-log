@@ -743,10 +743,19 @@ right",False,True,163.46,163.972,0.5120000000000005,False,False,False,False
 
 ### summary
 
+iterated on 4 VQA tasks:
+
+1. absolute spatial reasoning - what quadrant of the table is the banana in?
+2. relative spatial reasoning - what is the left-to-right order of the items on the table?
+3. counting - how many bananas are within bounds of the table?
+4. spatial action - what direction should the blue block be moved to be closer to the red block?
+
+insights:
+
 1. subtle changes in prompts heavily impact the performance of small VLMs
 2. overemphasis on fixing/defining a particular aspect can lead to hallucinations in other aspects
 3. so it is very important to word everything you want to cover in a clear and concise way
 4. for simple tasks like counting, it may be better to only output the answer, without reasoning before it
 5. it is difficult to force the model to output its final answer in a particular format always
 6. examples are very useful for alignment
-7. VLMs can identify distinct objects in an image and VERY roughly where they are. they still struggle at more complex spatial reasoning, especially inferring 3d information from a 2d image
+7. VLMs can identify and generally locate objects, but struggle at precise (e.g. small differences, with numbers) and complex (e.g. 3d) spatial reasoning
