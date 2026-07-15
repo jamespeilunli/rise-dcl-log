@@ -6,6 +6,8 @@
 
 1. [ros1 vision_msgs api](https://docs.ros.org/en/noetic/api/vision_msgs/html/index-msg.html)
 2. [yolo results api](https://docs.ultralytics.com/reference/engine/results)
+3. [moveit repo](https://github.com/RethinkRobotics/sawyer_moveit)
+4. [moveit tutorial](https://web.archive.org/web/20230217230652/https://sdk.rethinkrobotics.com/intera/MoveIt_Tutorial)
 
 ## learned
 
