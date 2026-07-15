@@ -81,4 +81,35 @@ right, up
 
 #### adding gripper pose context
 
+we subscribe to `/robot/limb/right/endpoint_state`
+
+#### crazy bug
+
+see [this commit](https://github.com/BU-DEPEND-Lab/RISE-2026/commit/5c3518e35569a8522c53a1716d3b949e60dd1f37)
+
+the sawyer gazebo cpp code had a dangling reference, making the published endpoint_state invalid. this was also what was causing our arm moving so weirdly
+
 #### getting it to output coordinates
+
+```
+Generate 3-8 ordered end-effector positions that complete the task. Keep the tool orientation fixed.
+
+Return only valid JSON in this format:
+
+[
+{"x": 0.0, "y": 0.0, "z": 0.0}
+]
+```
+
+#### make pose in sawyer frame
+
+```python
+def pose_in_sawyer_frame(pose, source_frame, tf_listener):
+    stamped_pose = PoseStamped()
+    stamped_pose.header.frame_id = source_frame
+    stamped_pose.header.stamp = rospy.Time(0)
+    stamped_pose.pose = pose
+    return tf_listener.transformPose(SAWYER_FRAME, stamped_pose).pose
+```
+
+i just call this on the output of the model and let the model do everything in the world frame
