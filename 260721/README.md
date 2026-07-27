@@ -180,6 +180,8 @@ bash docker/container_handler.sh enter ros1
 inside container:
 
 ```
+cd ~/code
+
 conda create --prefix "$PWD/env" python=3.10 -y
 conda activate "$PWD/env"
 
@@ -193,13 +195,9 @@ python -m pip install -r requirements.txt --no-cache-dir
 python -m pip install -e source/RosPoseToolkit --no-cache-dir
 
 bash scripts/install_foundationpose.sh
-
-
-
 ```
 
 ```
-
 source /opt/conda/etc/profile.d/conda.sh
 ```
 
