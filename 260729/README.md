@@ -1,5 +1,9 @@
 # 260729
 
+## sources
+
+1. [LTL automata checker - select LDBA asymmetric construction](https://owl.model.in.tum.de/try/)
+
 ## log
 
 ### minimal LTL pipeline snippet
