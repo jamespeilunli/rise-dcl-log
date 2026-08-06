@@ -6,7 +6,10 @@
 
 evaluation/gt changes:
 
--
+- spawn location doesn't avoid center
+- scoring changed
+- dynamic optimal command count
+- distances not considered
 
 controller changes:
 
