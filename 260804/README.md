@@ -81,3 +81,5 @@ the planner kept repeating the same command because the low level controller str
 - it wasn't good at following "Move the green block to the right of both the red and blue blocks."
 - it frequently used only one reference (often `red_y + 0.1`) instead of the required: `target_y = max(red_y, blue_y) + 0.1`
 - after LTL had moved red far left, that mistake placed green left of blue. LTL correctly observed that blue_left_of_green was still false, but then retried the same problematic command until the 10-command limit
+
+example: see trial 56 in `results/evaluation_ltl_2026-08-04-08-22-55/trials.csv`
